@@ -177,7 +177,7 @@ jobs:
       with:
         k8s-version: ${{ matrix.k8s-version }}
         kind-worker-count: 3
-        cluster-suffix: "${CLUSTER_SUFFIX}"
+        #cluster-suffix: "${CLUSTER_SUFFIX}"
 
     - name: Install Dependencies
       run: |
