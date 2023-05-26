@@ -2,7 +2,7 @@ name: my-secondkind-e2e
 
 on:
   pull_request:
-    branches: [ 'main', 'release-*' ,'test*' ]
+    branches: [ 'main', 'release-*' ,'test*' ,'temp*' ]
 
 defaults:
   run:
