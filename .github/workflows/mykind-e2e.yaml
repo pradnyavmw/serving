@@ -270,35 +270,35 @@ jobs:
 
     #     kind create cluster --config kind.yaml --wait 5m
 
-    - name: Install metallb
-      shell: bash
-      run: |
-        # Install metallb
-        # disable the webhook-mode because there is a bug:https://github.com/metallb/metallb/issues/1597
-        # this webhook only checks crd, it has not effects to out e2e tests
-        curl https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml -k | \
-         sed '0,/args:/s//args:\n        - --webhook-mode=disabled/' | \
-         sed '/apiVersion: admissionregistration/,$d' | \
-         kubectl apply -f -
+#     - name: Install metallb
+#       shell: bash
+#       run: |
+#         # Install metallb
+#         # disable the webhook-mode because there is a bug:https://github.com/metallb/metallb/issues/1597
+#         # this webhook only checks crd, it has not effects to out e2e tests
+#         curl https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml -k | \
+#          sed '0,/args:/s//args:\n        - --webhook-mode=disabled/' | \
+#          sed '/apiVersion: admissionregistration/,$d' | \
+#          kubectl apply -f -
 
-        # Add Layer 2 config
-        network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
-        cat <<EOF | kubectl apply -f -
-        apiVersion: metallb.io/v1beta1
-        kind: IPAddressPool
-        metadata:
-          name: first-pool
-          namespace: metallb-system
-        spec:
-          addresses:
-          - $network.255.1-$network.255.250
-        ---
-        apiVersion: metallb.io/v1beta1
-        kind: L2Advertisement
-        metadata:
-          name: example
-          namespace: metallb-system
-        EOF
+#         # Add Layer 2 config
+#         network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
+#         cat <<EOF | kubectl apply -f -
+#         apiVersion: metallb.io/v1beta1
+#         kind: IPAddressPool
+#         metadata:
+#           name: first-pool
+#           namespace: metallb-system
+#         spec:
+#           addresses:
+#           - $network.255.1-$network.255.250
+#         ---
+#         apiVersion: metallb.io/v1beta1
+#         kind: L2Advertisement
+#         metadata:
+#           name: example
+#           namespace: metallb-system
+#         EOF
 
     - name: Setup local registry
       run: |
