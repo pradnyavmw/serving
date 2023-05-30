@@ -169,15 +169,7 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    
-    - name: Setup KinD
-      uses: chainguard-dev/actions/setup-kind@main
-      with:
-        k8s-version: ${{ matrix.k8s-version }}
-        kind-worker-count: 4
-        registry-authority: registry.local:5000
-
-
+   
     - name: Install Dependencies
       run: |
         set -x
@@ -204,6 +196,14 @@ jobs:
         chmod +x ./ytt
         sudo mv ytt /usr/local/bin
         echo "::endgroup::"
+ 
+    - name: Setup KinD
+      uses: chainguard-dev/actions/setup-kind@main
+      with:
+        k8s-version: ${{ matrix.k8s-version }}
+        kind-worker-count: 4
+        registry-authority: registry.local:5000
+
 
     - uses: actions/checkout@v3
       with:
@@ -321,7 +321,7 @@ jobs:
         #   -p $5001:5001 --name $REGISTRY_NAME-test registry:2
 
         # Connect the registry to the KinD network.
-        docker network connect "kind" $REGISTRY_NAME
+        # docker network connect "kind" $REGISTRY_NAME
 
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
