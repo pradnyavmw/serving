@@ -316,11 +316,13 @@ jobs:
         # # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
         # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
-        docker run -d --restart=always \
-          -v $HOME/artifacts/registry:/var/lib/registry \
-          -p $5001:5001 --name $REGISTRY_NAME-test registry:2
+        # docker run -d --restart=always \
+        #   -v $HOME/artifacts/registry:/var/lib/registry \
+        #   -p $5001:5001 --name $REGISTRY_NAME-test registry:2
+
         # Connect the registry to the KinD network.
         docker network connect "kind" $REGISTRY_NAME
+        
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
         sudo echo "127.0.0.1 $REGISTRY_NAME-test" | sudo tee -a /etc/hosts
