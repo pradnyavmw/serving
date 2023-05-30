@@ -59,6 +59,7 @@ jobs:
 
     - name: Setup Registry
       run: |
+      
         docker run -d --restart=always \
           -p $REGISTRY_PORT:$REGISTRY_PORT \
           -v ~/artifacts/registry:/var/lib/registry \
@@ -306,27 +307,21 @@ jobs:
 
     - name: Setup local registry
       run: |
+
+        docker stop $REGISTRY_NAME
+        docker rm $REGISTRY_NAME
+
         # Run a registry.
-        # docker run -d --restart=always \
-        #   -v $HOME/artifacts/registry:/var/lib/registry \
-        #   -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
-        # # Connect the registry to the KinD network.
-        # docker network connect "kind" $REGISTRY_NAME
-        # # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
-        # # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
-
-        # docker run -d --restart=always \
-        #   -v $HOME/artifacts/registry:/var/lib/registry \
-        #   -p $5001:5001 --name $REGISTRY_NAME-test registry:2
-
+        docker run -d --restart=always \
+          -v $HOME/artifacts/registry:/var/lib/registry \
+          -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
         # Connect the registry to the KinD network.
-        # docker network connect "kind" $REGISTRY_NAME
-
+        docker network connect "kind" $REGISTRY_NAME
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+        sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
+ 
 
     - name: Install Serving & Ingress
       run: |
