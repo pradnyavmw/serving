@@ -322,10 +322,10 @@ jobs:
 
         # Connect the registry to the KinD network.
         docker network connect "kind" $REGISTRY_NAME
-        
+
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        sudo echo "127.0.0.1 $REGISTRY_NAME-test" | sudo tee -a /etc/hosts
+        # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
 
     - name: Install Serving & Ingress
