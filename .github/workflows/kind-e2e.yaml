@@ -62,11 +62,11 @@ jobs:
         docker run -d --restart=always \
           -p $REGISTRY_PORT:$REGISTRY_PORT \
           -v ~/artifacts/registry:/var/lib/registry \
-          --name $REGISTRY_NAME-test registry:2
+          --name $REGISTRY_NAME registry:2
 
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local reigstry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        sudo echo "127.0.0.1 $REGISTRY_NAME-test" | sudo tee -a /etc/hosts
+        sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
     - name: Build Knative
       run: |
@@ -309,12 +309,12 @@ jobs:
         # Run a registry.
         docker run -d --restart=always \
           -v $HOME/artifacts/registry:/var/lib/registry \
-          -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
+          -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME-test registry:2
         # Connect the registry to the KinD network.
         docker network connect "kind" $REGISTRY_NAME
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+        sudo echo "127.0.0.1 $REGISTRY_NAME-test" | sudo tee -a /etc/hosts
 
     - name: Install Serving & Ingress
       run: |
