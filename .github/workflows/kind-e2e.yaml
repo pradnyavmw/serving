@@ -188,7 +188,6 @@ jobs:
       with:
         k8s-version: ${{ matrix.k8s-version }}
         kind-worker-count: 4
-        #registry-authority: registry.local:5000
 
     - name: Install Dependencies
       run: |
@@ -217,14 +216,10 @@ jobs:
         sudo mv ytt /usr/local/bin
         echo "::endgroup::"
  
-  
-
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
-       
-
+      
     - uses: actions/download-artifact@v3
       with:
         name: artifacts
@@ -350,9 +345,6 @@ jobs:
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
         sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
  
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
-
     - name: Install Serving & Ingress
       run: |
         set -x
@@ -371,6 +363,9 @@ jobs:
         echo "CA_CERT=$CA_CERT" >> $GITHUB_ENV
         echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
     
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Test ${{ matrix.test-suite }}
       run: |
         gotestsum --format testname -- \
@@ -380,7 +375,7 @@ jobs:
           -skip-cleanup-on-fail \
           ${{ matrix.test-flags || '-enable-alpha -enable-beta' }} \
           --ingress-class=${{ matrix.ingress-class || matrix.ingress }}.ingress.networking.knative.dev
-
+        
     - uses: chainguard-dev/actions/kind-diag@main
       # Only upload logs on failure.
       if: ${{ failure() }}
