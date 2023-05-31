@@ -322,23 +322,36 @@ jobs:
 
     # - name: Setup local registry
     #   run: |
-
-    #     #docker stop $REGISTRY_NAME
-    #     #docker rm $REGISTRY_NAME
+    #       docker stop $REGISTRY_NAME
+    #       docker rm $REGISTRY_NAME
 
     #     # Run a registry.
-    #     docker run -d --restart=always \
+    #       docker run -d --restart=always \
     #       -v $HOME/artifacts/registry:/var/lib/registry \
     #       -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
     #     # Connect the registry to the KinD network.
-    #     docker network connect "kind" $REGISTRY_NAME
+    #       docker network connect "kind" $REGISTRY_NAME
     #     # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
     #     # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-    #     sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+    #       sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
+    - name: Setup local registry
+      run: |
+        docker stop $REGISTRY_NAME
+        docker rm $REGISTRY_NAME
+
+        # Run a registry.
+        docker run -d --restart=always \
+          -v $HOME/artifacts/registry:/var/lib/registry \
+          -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
+        # Connect the registry to the KinD network.
+        docker network connect "kind" $REGISTRY_NAME
+        # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
+        # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
+        sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
  
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Install Serving & Ingress
       run: |
