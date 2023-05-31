@@ -223,9 +223,7 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-          
+       
 
     - uses: actions/download-artifact@v3
       with:
@@ -357,7 +355,10 @@ jobs:
         echo "GATEWAY_NAMESPACE_OVERRIDE=$GATEWAY_NAMESPACE_OVERRIDE" >> $GITHUB_ENV
         echo "CA_CERT=$CA_CERT" >> $GITHUB_ENV
         echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
-
+    
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      
     - name: Test ${{ matrix.test-suite }}
       run: |
         gotestsum --format testname -- \
