@@ -121,7 +121,7 @@ jobs:
         # - api
         - e2e
 
-        # include:
+        include:
         #   # Map between K8s and KinD versions.
         #   # This is attempting to make it a bit clearer what's being tested.
         #   # See: https://github.com/kubernetes-sigs/kind/releases
