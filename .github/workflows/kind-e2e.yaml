@@ -337,6 +337,9 @@ jobs:
     #     sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
  
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      
 
     - name: Install Serving & Ingress
       run: |
@@ -356,9 +359,6 @@ jobs:
         echo "CA_CERT=$CA_CERT" >> $GITHUB_ENV
         echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
     
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      
     - name: Test ${{ matrix.test-suite }}
       run: |
         gotestsum --format testname -- \
