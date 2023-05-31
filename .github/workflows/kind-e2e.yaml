@@ -42,13 +42,16 @@ jobs:
         mkdir -p ~/artifacts/build
         mkdir -p ~/artifacts/registry
 
+#After the cache action has finished running, it exposes a single output parameter, the cache-hit. This parameter is a Boolean value representing whether GitHub found an exact match for the specified key. If true, this is considered a cache hit, and the action will restore whatever files it has cached to the path directory. However, if false, a cache miss has happened, and GitHub will create a new cache after the current job. To generate the files that need to be cached, you can use the cache-hit output parameter to conditionally run your package manager in case of a cache miss.
+
+
     - uses: actions/cache@v3 #This action allows caching dependencies and build outputs to improve workflow execution time.
       with:
-        path: |
+        path: |     #is the path(s) on the runner that you would like to cache. It will typically point to wherever your dependencies are stored
           ~/.cache/go-build
            ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }} #s the key that will be used to identify the cache when it’s created. It’s also used to search for the cache when looking for an appropriate one to restore
+        restore-keys: | #represents additional keys that GitHub can use to restore your cache if no hits are found for the key. Defining this allows for tiered caching, where the key is the priority, followed by each of the restore-keys in the order they are defined.
           ${{ runner.os }}-go-
     
     - uses: imjasonh/setup-ko@v0.6
@@ -60,6 +63,15 @@ jobs:
     - name: Setup Registry
       run: |
       
+        # docker run -d --restart=always \
+        #   -p $REGISTRY_PORT:$REGISTRY_PORT \
+        #   -v ~/artifacts/registry:/var/lib/registry \
+        #   --name $REGISTRY_NAME registry:2
+
+        # # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
+        # # local reigstry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
+        # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+
         docker run -d --restart=always \
           -p $REGISTRY_PORT:$REGISTRY_PORT \
           -v ~/artifacts/registry:/var/lib/registry \
@@ -161,7 +173,7 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
-
+    
     - uses: actions/cache@v3
       with:
         path: |
@@ -170,7 +182,14 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-   
+
+    - name: Setup KinD
+      uses: chainguard-dev/actions/setup-kind@main
+      with:
+        k8s-version: ${{ matrix.k8s-version }}
+        kind-worker-count: 4
+        #registry-authority: registry.local:5000
+
     - name: Install Dependencies
       run: |
         set -x
@@ -198,17 +217,11 @@ jobs:
         sudo mv ytt /usr/local/bin
         echo "::endgroup::"
  
-    - name: Setup KinD
-      uses: chainguard-dev/actions/setup-kind@main
-      with:
-        k8s-version: ${{ matrix.k8s-version }}
-        kind-worker-count: 4
-        registry-authority: registry.local:5000
-
+  
 
     - uses: actions/checkout@v3
-      # with:
-      #   fetch-depth: 0
+      with:
+        fetch-depth: 0
 
     - uses: actions/download-artifact@v3
       with:
@@ -305,21 +318,21 @@ jobs:
     #       namespace: metallb-system
     #     EOF
 
-    - name: Setup local registry
-      run: |
+    # - name: Setup local registry
+    #   run: |
 
-        docker stop $REGISTRY_NAME
-        docker rm $REGISTRY_NAME
+    #     #docker stop $REGISTRY_NAME
+    #     #docker rm $REGISTRY_NAME
 
-        # Run a registry.
-        docker run -d --restart=always \
-          -v $HOME/artifacts/registry:/var/lib/registry \
-          -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
-        # Connect the registry to the KinD network.
-        docker network connect "kind" $REGISTRY_NAME
-        # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
-        # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
+    #     # Run a registry.
+    #     docker run -d --restart=always \
+    #       -v $HOME/artifacts/registry:/var/lib/registry \
+    #       -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
+    #     # Connect the registry to the KinD network.
+    #     docker network connect "kind" $REGISTRY_NAME
+    #     # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
+    #     # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
+    #     sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
  
 
