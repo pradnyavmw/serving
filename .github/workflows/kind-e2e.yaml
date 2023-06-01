@@ -111,14 +111,14 @@ jobs:
         ingress:
         # - kourier
         # - kourier-tls
-        # - istio
-        - contour
+        - istio
+        #- contour
         # Disabled due to consistent failures
         # - gateway_istio
 
         test-suite:
-        # - runtime
-        # - api
+        - runtime
+        - api
         - e2e
 
         include:
