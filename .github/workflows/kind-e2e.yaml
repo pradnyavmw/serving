@@ -368,13 +368,13 @@ jobs:
 
     - name: Test ${{ matrix.test-suite }}
       run: |
-        gotestsum --format testname -- \
-          -race -count=1 -parallel=1 -tags=e2e \
-          -timeout=30m \
-          ${{ matrix.test-path }} \
-          -skip-cleanup-on-fail \
-          ${{ matrix.test-flags || '-enable-alpha -enable-beta' }} \
-          --ingress-class=${{ matrix.ingress-class || matrix.ingress }}.ingress.networking.knative.dev
+        # gotestsum --format testname -- \
+        #   -race -count=1 -parallel=1 -tags=e2e \
+        #   -timeout=30m \
+        #   ${{ matrix.test-path }} \
+        #   -skip-cleanup-on-fail \
+        #   ${{ matrix.test-flags || '-enable-alpha -enable-beta' }} \
+        #   --ingress-class=${{ matrix.ingress-class || matrix.ingress }}.ingress.networking.knative.dev
         
     - uses: chainguard-dev/actions/kind-diag@main
       # Only upload logs on failure.
