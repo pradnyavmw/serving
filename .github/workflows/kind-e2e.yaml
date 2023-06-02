@@ -3,6 +3,8 @@ name: e2e
 on:
   pull_request:
     branches: [ 'main', 'release-*' ]
+  push:
+    branches: [ 'main', 'release-*' ,'test*' ,'temp*' ]
 
 defaults:
   run:
