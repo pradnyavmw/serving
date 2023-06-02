@@ -3,8 +3,6 @@ name: e2e
 on:
   pull_request:
     branches: [ 'main', 'release-*' ]
-  push:
-    branches: [ 'main', 'release-*' ,'test*' ,'temp*' ]
 
 defaults:
   run:
@@ -14,7 +12,7 @@ env:
   # https://github.com/google/go-containerregistry/pull/125 allows insecure registry for
   # '*.local' hostnames. This works both for `ko` and our own tag-to-digest resolution logic,
   # thus allowing us to test without bypassing tag-to-digest resolution.
-  #CLUSTER_DOMAIN: c${{ github.run_id }}.local
+  CLUSTER_DOMAIN: c${{ github.run_id }}.local
   REGISTRY_NAME: registry.local
   REGISTRY_PORT: 5000
   KO_DOCKER_REPO: registry.local:5000/knative
@@ -30,9 +28,9 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3 #This action checks-out SERVING repo under $GITHUB_WORKSPACE , so your workflow can access it
+    - uses: actions/checkout@v3
 
-    - name: Set up Go 1.19.x #This action sets up a go environment for use in actions by: Optionally downloading and caching a version of Go by version and adding to PATH
+    - name: Set up Go 1.19.x
       uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
@@ -42,36 +40,20 @@ jobs:
         mkdir -p ~/artifacts/build
         mkdir -p ~/artifacts/registry
 
-#After the cache action has finished running, it exposes a single output parameter, the cache-hit. This parameter is a Boolean value representing whether GitHub found an exact match for the specified key. If true, this is considered a cache hit, and the action will restore whatever files it has cached to the path directory. However, if false, a cache miss has happened, and GitHub will create a new cache after the current job. To generate the files that need to be cached, you can use the cache-hit output parameter to conditionally run your package manager in case of a cache miss.
-
-
-    - uses: actions/cache@v3 #This action allows caching dependencies and build outputs to improve workflow execution time.
+    - uses: actions/cache@v3
       with:
-        path: |     #is the path(s) on the runner that you would like to cache. It will typically point to wherever your dependencies are stored
+        path: |
           ~/.cache/go-build
            ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }} #s the key that will be used to identify the cache when it’s created. It’s also used to search for the cache when looking for an appropriate one to restore
-        restore-keys: | #represents additional keys that GitHub can use to restore your cache if no hits are found for the key. Defining this allows for tiered caching, where the key is the priority, followed by each of the restore-keys in the order they are defined.
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
           ${{ runner.os }}-go-
-    
-    - uses: imjasonh/setup-ko@v0.6
 
     # Install the latest release of ko
-    # - name: Install ko
-    #   uses: ko-build/setup-ko@v0.6
+    - uses: imjasonh/setup-ko@v0.6
 
     - name: Setup Registry
       run: |
-      
-        # docker run -d --restart=always \
-        #   -p $REGISTRY_PORT:$REGISTRY_PORT \
-        #   -v ~/artifacts/registry:/var/lib/registry \
-        #   --name $REGISTRY_NAME registry:2
-
-        # # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
-        # # local reigstry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-        # sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
-
         docker run -d --restart=always \
           -p $REGISTRY_PORT:$REGISTRY_PORT \
           -v ~/artifacts/registry:/var/lib/registry \
@@ -122,22 +104,6 @@ jobs:
         - e2e
 
         include:
-        #   # Map between K8s and KinD versions.
-        #   # This is attempting to make it a bit clearer what's being tested.
-        #   # See: https://github.com/kubernetes-sigs/kind/releases
-        #   #      https://hub.docker.com/r/kindest/node/tags
-        # - k8s-version: v1.25.9
-        #   kind-version: v0.19.0
-        #   kind-image-sha: sha256:c08d6c52820aa42e533b70bce0c2901183326d86dcdcbedecc9343681db45161
-
-        # - k8s-version: v1.26.4
-        #   kind-version: v0.19.0
-        #   kind-image-sha: sha256:f4c0d87be03d6bea69f5e5dc0adb678bb498a190ee5c38422bf751541cebe92e
-
-        # - k8s-version: v1.27.1
-        #   kind-version: v0.19.0
-        #   kind-image-sha: sha256:b7d12ed662b873bd8510879c1846e87c7e676a79fefc93e17b2a52989d3ff42b
-
         # Disabled due to consistent failures
         # - ingress: gateway_istio
         #   ingress-class: gateway-api
@@ -173,7 +139,7 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
-    
+
     - uses: actions/cache@v3
       with:
         path: |
@@ -182,22 +148,16 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-
-    - name: Setup KinD
+    
+    - name: Setup KinD 
       uses: chainguard-dev/actions/setup-kind@main
       with:
         k8s-version: ${{ matrix.k8s-version }}
         kind-worker-count: 4
-
+ 
     - name: Install Dependencies
       run: |
         set -x
-        # echo "::group:: install kind ${KIND_VERSION}"
-        # curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64
-        # chmod +x ./kind
-        # sudo mv kind /usr/local/bin
-        # echo "::endgroup::"
-
         echo "::group:: install gotestsum ${GOTESTSUM_VERSION}"
         curl -L https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz | tar xzf - gotestsum
         chmod +x ./gotestsum
@@ -215,125 +175,20 @@ jobs:
         chmod +x ./ytt
         sudo mv ytt /usr/local/bin
         echo "::endgroup::"
- 
+
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-      
+
     - uses: actions/download-artifact@v3
       with:
         name: artifacts
         path: ~/artifacts
 
-    # - name: Configure KinD Cluster
-    #   run: |
-    #     set -x
-
-    #     # Disable swap otherwise memory enforcement doesn't work
-    #     # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600009955324200
-    #     sudo swapoff -a
-    #     sudo rm -f /swapfile
-
-    #     # Use in-memory storage to avoid etcd server timeouts.
-    #     # https://kubernetes.slack.com/archives/CEKK1KTN2/p1615134111016300
-    #     # https://github.com/kubernetes-sigs/kind/issues/845
-    #     sudo mkdir -p /tmp/etcd
-    #     sudo mount -t tmpfs tmpfs /tmp/etcd
-
-    #     # KinD configuration.
-    #     cat > kind.yaml <<EOF
-    #     apiVersion: kind.x-k8s.io/v1alpha4
-    #     kind: Cluster
-
-    #     # Configure registry for KinD.
-    #     containerdConfigPatches:
-    #     - |-
-    #       [plugins."io.containerd.grpc.v1.cri".registry.mirrors."$REGISTRY_NAME:$REGISTRY_PORT"]
-    #         endpoint = ["http://$REGISTRY_NAME:$REGISTRY_PORT"]
-    #       [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-    #         endpoint = ["https://mirror.gcr.io"]
-
-    #     # This is needed in order to support projected volumes with service account tokens.
-    #     # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
-    #     kubeadmConfigPatches:
-    #       - |
-    #         kind: ClusterConfiguration
-    #         metadata:
-    #           name: config
-    #         apiServer:
-    #           extraArgs:
-    #             "service-account-issuer": "kubernetes.default.svc"
-    #             "service-account-signing-key-file": "/etc/kubernetes/pki/sa.key"
-    #         networking:
-    #           dnsDomain: "${CLUSTER_DOMAIN}"
-
-    #     nodes:
-    #     - role: control-plane
-    #       image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-    #       extraMounts:
-    #       - containerPath: /var/lib/etcd
-    #         hostPath: /tmp/etcd
-    #     - role: worker
-    #       image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-    #     - role: worker
-    #       image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-    #     - role: worker
-    #       image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-    #     - role: worker
-    #       image: kindest/node:${{ matrix.k8s-version }}@${{ matrix.kind-image-sha }}
-    #     EOF
-
-    #     kind create cluster --config kind.yaml --wait 5m
-
-    # - name: Install metallb
-    #   shell: bash
-    #   run: |
-    #     # Install metallb
-    #     # disable the webhook-mode because there is a bug:https://github.com/metallb/metallb/issues/1597
-    #     # this webhook only checks crd, it has not effects to out e2e tests
-    #     curl https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml -k | \
-    #      sed '0,/args:/s//args:\n        - --webhook-mode=disabled/' | \
-    #      sed '/apiVersion: admissionregistration/,$d' | \
-    #      kubectl apply -f -
-
-    #     # Add Layer 2 config
-    #     network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
-    #     cat <<EOF | kubectl apply -f -
-    #     apiVersion: metallb.io/v1beta1
-    #     kind: IPAddressPool
-    #     metadata:
-    #       name: first-pool
-    #       namespace: metallb-system
-    #     spec:
-    #       addresses:
-    #       - $network.255.1-$network.255.250
-    #     ---
-    #     apiVersion: metallb.io/v1beta1
-    #     kind: L2Advertisement
-    #     metadata:
-    #       name: example
-    #       namespace: metallb-system
-    #     EOF
-
-    # - name: Setup local registry
-    #   run: |
-    #       docker stop $REGISTRY_NAME
-    #       docker rm $REGISTRY_NAME
-
-    #     # Run a registry.
-    #       docker run -d --restart=always \
-    #       -v $HOME/artifacts/registry:/var/lib/registry \
-    #       -p $REGISTRY_PORT:$REGISTRY_PORT --name $REGISTRY_NAME registry:2
-    #     # Connect the registry to the KinD network.
-    #       docker network connect "kind" $REGISTRY_NAME
-    #     # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
-    #     # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-    #       sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
-
     - name: Setup local registry
       run: |
-        docker stop $REGISTRY_NAME
-        docker rm $REGISTRY_NAME
+       docker stop $REGISTRY_NAME
+       docker rm $REGISTRY_NAME
 
         # Run a registry.
         docker run -d --restart=always \
@@ -344,7 +199,7 @@ jobs:
         # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
         # local registry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
         sudo echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
- 
+
     - name: Install Serving & Ingress
       run: |
         set -x
@@ -362,20 +217,17 @@ jobs:
         echo "GATEWAY_NAMESPACE_OVERRIDE=$GATEWAY_NAMESPACE_OVERRIDE" >> $GITHUB_ENV
         echo "CA_CERT=$CA_CERT" >> $GITHUB_ENV
         echo "SERVER_NAME=$SERVER_NAME" >> $GITHUB_ENV
-    
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
 
     - name: Test ${{ matrix.test-suite }}
       run: |
-        # gotestsum --format testname -- \
-        #   -race -count=1 -parallel=1 -tags=e2e \
-        #   -timeout=30m \
-        #   ${{ matrix.test-path }} \
-        #   -skip-cleanup-on-fail \
-        #   ${{ matrix.test-flags || '-enable-alpha -enable-beta' }} \
-        #   --ingress-class=${{ matrix.ingress-class || matrix.ingress }}.ingress.networking.knative.dev
-        
+        gotestsum --format testname -- \
+          -race -count=1 -parallel=1 -tags=e2e \
+          -timeout=30m \
+          ${{ matrix.test-path }} \
+          -skip-cleanup-on-fail \
+          ${{ matrix.test-flags || '-enable-alpha -enable-beta' }} \
+          --ingress-class=${{ matrix.ingress-class || matrix.ingress }}.ingress.networking.knative.dev
+    
     - uses: chainguard-dev/actions/kind-diag@main
       # Only upload logs on failure.
       if: ${{ failure() }}
