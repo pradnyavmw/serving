@@ -52,7 +52,8 @@ jobs:
           ${{ runner.os }}-go-
 
     # Install the latest release of ko
-    - uses: imjasonh/setup-ko@v0.6
+    - name: Install ko
+      uses: ko-build/setup-ko@v0.6
 
     - name: Setup Registry
       run: |
@@ -157,6 +158,7 @@ jobs:
         k8s-version: ${{ matrix.k8s-version }}
         kind-worker-count: 4
         cluster-suffix: c${{ github.run_id }}.local
+        registry-volume: $HOME/artifacts/registry
 
  
     - name: Install Dependencies
@@ -191,9 +193,6 @@ jobs:
 
     - name: Setup local registry
       run: |
-       docker stop $REGISTRY_NAME
-       docker rm $REGISTRY_NAME
-
         # Run a registry.
         docker run -d --restart=always \
           -v $HOME/artifacts/registry:/var/lib/registry \
