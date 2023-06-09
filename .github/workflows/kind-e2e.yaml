@@ -159,7 +159,6 @@ jobs:
         kind-worker-count: 4
         cluster-suffix: c${{ github.run_id }}.local
         registry-volume: $HOME/artifacts/registry
-
  
     - name: Install Dependencies
       run: |
@@ -186,10 +185,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: artifacts
-        path: ~/artifacts
+    # - uses: actions/download-artifact@v3
+    #   with:
+    #     name: artifacts
+    #     path: ~/artifacts
 
     # - name: Setup local registry
     #   run: |
